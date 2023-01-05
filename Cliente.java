@@ -75,9 +75,10 @@ public class Cliente {
 
     @Override
     public String toString() {
-        StringBuilder alugueisAtivos = new StringBuilder();
-        for (Aluguel aluguel : alugueisAtivos())
-            alugueisAtivos.append("\n").append(aluguel.toString());
+        String alugueisAtivos = "";
+        if (alugueisAtivos() != null)
+            for (Aluguel aluguel : alugueisAtivos())
+                alugueisAtivos += ("\n") + aluguel.toString();
         return "Nome: " + nome + "\nCPF: " + cpf + "\nAlugueis ativos: " + alugueisAtivos;
     }
 
