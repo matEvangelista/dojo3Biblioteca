@@ -1,18 +1,24 @@
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Objects;
 
 public class Livro {
-    private String titulo, autor, editora, dataPublicacao; // não sei trabalhar com datas
-    private boolean alugado = false; // vai ser útil na hora de listar o livro.
-    // naturalmente, um livro criado não é automaticamente adicionado
+    private String titulo, autor, editora;
+    private Date dataPublicacao;
+    private Aluguel aluguel;
 
-    public Livro(String titulo, String autor, String editora, String dataPublicacao) {
+
+    public Livro(String titulo, String autor, String editora, Date dataPublicacao) {
         this.titulo = titulo;
         this.autor = autor;
         this.editora = editora;
         this.dataPublicacao = dataPublicacao;
+        aluguel = null;
     }
 
     // equals para usar com arraylist
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -20,22 +26,40 @@ public class Livro {
 
         Livro livro = (Livro) o;
 
-        if (alugado != livro.alugado) return false;
         if (!Objects.equals(titulo, livro.titulo)) return false;
         if (!Objects.equals(autor, livro.autor)) return false;
         if (!Objects.equals(editora, livro.editora)) return false;
-        return Objects.equals(dataPublicacao, livro.dataPublicacao);
+        if (!Objects.equals(dataPublicacao, livro.dataPublicacao))
+            return false;
+        return Objects.equals(aluguel, livro.aluguel);
+    }
+
+    // adiciona emprestimo (mesma lógica da classe cliente)
+    public boolean fazEmprestimo(Aluguel aluguel) throws Exception {
+        if (isAlugado())
+            return false;
+        this.aluguel = aluguel;
+        return true;
+    }
+
+    // desfaz emprestimo
+    public boolean desfazEmprestimo(Aluguel aluguel) {
+        if (!aluguel.equals(this.aluguel))
+            return false;
+        aluguel = null;
+        return true;
+    }
+
+
+    // is alugado
+    public boolean isAlugado() {
+        return aluguel != null;
     }
 
     // toString com os dados do livro
     public String toString() {
         return "Título: " + titulo + "\nAutor: " + autor + "\nEditora: " + editora + "\nData de publicação: " +
-                dataPublicacao + "\nAlugado: " + (alugado ? "sim" : "não") + "\n";
-    }
-
-    // "setter", outros dados não podem ser alterados
-    public void setAlugado(boolean alugado) {
-        this.alugado = alugado;
+                dataPublicacao + "\nAlugado: " + (isAlugado() ? "sim" : "não") + "\n";
     }
 
     // getter
@@ -51,11 +75,4 @@ public class Livro {
         return editora;
     }
 
-    public String getDataPublicacao() {
-        return dataPublicacao;
-    }
-
-    public boolean isAlugado() {
-        return alugado;
-    }
 }

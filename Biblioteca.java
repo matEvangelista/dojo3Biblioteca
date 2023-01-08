@@ -1,8 +1,11 @@
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class Biblioteca {
-    public ArrayList<Cliente> clientes = new ArrayList<>();
-    public ArrayList<Livro> livros = new ArrayList<>(1000);
+    private ArrayList<Cliente> clientes = new ArrayList<>();
+    private ArrayList<Livro> livros = new ArrayList<>();
+    private ArrayList<Aluguel> alugueis = new ArrayList<>();
 
     public Biblioteca() {
     }
@@ -35,40 +38,36 @@ public class Biblioteca {
         return false;
     }
 
-    public boolean fazAluguel(Cliente cliente, Livro livro, int dataInicio) {
+    public boolean fazAluguel(Cliente cliente, Livro livro, Date dataInicio) throws Exception {
         if (!clientes.contains(cliente) || !livros.contains(livro) || !cliente.podeAlugarMais() || livro.isAlugado())
             return false;
         int pos = clientes.indexOf(cliente);
-        if (clientes.get(pos).pegaEmprestimo(livro, dataInicio)) {
-            livro.setAlugado(true);
+        Aluguel al = new Aluguel(clientes.get(pos), livro, dataInicio);
+        if (clientes.get(pos).adicionaEmprestimo(al)) {
+            livro.fazEmprestimo(al);
+            alugueis.add(al);
             return true;
         }
         return false;
     }
 
-    public boolean desfazAluguel(Cliente cliente, Livro livro) {
+    public boolean desfazAluguel(Cliente cliente, Aluguel aluguel, Livro livro, Date dataFim) throws Exception {
         if (!clientes.contains(cliente) || !cliente.possuiAluguelAtivo() || !livros.contains(livro) ||
-                !livro.isAlugado()) {
+                !livro.isAlugado() || !alugueis.contains(aluguel) || !aluguel.getLivro().equals(livro) ||
+                !aluguel.getCliente().equals(cliente) || encontraAluguel(aluguel) == -1)
             return false;
-        }
-        int pos = clientes.indexOf(cliente);
-        if (clientes.get(pos).desfazEmprestimo(livro)) {
-            livro.setAlugado(false);
-            return true;
-        }
-        return false;
+        cliente.desfazEmprestimo(aluguel, dataFim);
+        alugueis.get(encontraAluguel(aluguel)).setDataFim(dataFim);
+        livro.desfazEmprestimo(aluguel);
+        return true;
     }
 
-    public Cliente buscaClientePorPosicao(int p) {
-        if (p < clientes.size())
-            return clientes.get(p);
-        return null;
+    public ArrayList<Cliente> getClientes() {
+        return clientes;
     }
 
-    public Livro buscaLivroPorPosicao(int p) {
-        if (p < livros.size())
-            return livros.get(p);
-        return null;
+    public ArrayList<Livro> getLivros() {
+        return livros;
     }
 
     public String stringLivros() {
@@ -83,6 +82,20 @@ public class Biblioteca {
         for (Cliente cliente : clientes)
             resultado += cliente.toString();
         return resultado;
+    }
+
+    public String stringAlugueis() {
+        String resultado = "";
+        for (Aluguel aluguel : alugueis)
+            resultado += aluguel.toString();
+        return resultado;
+    }
+
+    public int encontraAluguel(Aluguel aluguel) {
+        for (int i = 0; i < alugueis.size(); i++)
+            if (aluguel.equals(alugueis.get(i)))
+                return i;
+        return -1;
     }
 
 

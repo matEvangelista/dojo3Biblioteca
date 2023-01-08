@@ -1,4 +1,7 @@
-import javax.swing.*;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Date;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Menu {
@@ -14,7 +17,7 @@ public class Menu {
         boolean continua = true;
         do {
             mostraOpcoes();
-            int opcao = leOpcao();
+            int opcao = leOpcao(1, 10);
             switch (opcao) {
                 case 1:
                     listarLivros();
@@ -23,24 +26,35 @@ public class Menu {
                     listarClientes();
                     break;
                 case 3:
-                    cadastrarUsuario();
+                    listarEmprestimos();
                     break;
                 case 4:
-                    cadastrarLivro();
+                    cadastrarUsuario();
                     break;
                 case 5:
-                    removerUsuario();
+                    cadastrarLivro();
                     break;
                 case 6:
-                    removerLivro();
+                    removerUsuario();
                     break;
                 case 7:
-                    fazerEmprestimo();
+                    removerLivro();
                     break;
                 case 8:
-                    //desfazerEmprestimo();
+                    try {
+                        fazerEmprestimo();
+                    } catch (Exception exception) {
+                        System.out.println(exception);
+                    }
                     break;
                 case 9:
+                    try {
+                        desfazerEmprestimo();
+                    } catch (Exception exception) {
+                        System.out.println(exception);
+                    }
+                    break;
+                case 10:
                     System.out.println("Adeus");
                     continua = false;
                     break;
@@ -53,18 +67,20 @@ public class Menu {
     }
 
     public void mostraOpcoes() {
-        System.out.println(
-                "O que você quer fazer?\n" +
-                        "1. Listar todos os livros\n" +
-                        "2. Listar todos os clientes\n" +
-                        "3. Cadastrar um usuario\n" +
-                        "4. Cadastrar um livro\n" +
-                        "5. Remover um usuário\n" +
-                        "6. Remover um livro\n" +
-                        "7. Fazer um empréstimo\n" +
-                        "8. Desfazer um empréstimo\n" +
-                        "9. Sair\n\n"
-        );
+        System.out.println("""
+                O que você quer fazer?
+                1. Listar todos os livros
+                2. Listar todos os clientes
+                3. Listar empréstimos
+                4. Cadastrar um usuario
+                5. Cadastrar um livro
+                6. Remover um usuário
+                7. Remover um livro
+                8. Fazer um empréstimo
+                9. Desfazer um empréstimo
+                10. Sair
+
+                """);
     }
 
     public void listarLivros() {
@@ -75,62 +91,59 @@ public class Menu {
         System.out.println(biblioteca.stringClientes());
     }
 
+    public void listarEmprestimos() {
+        System.out.println(biblioteca.stringAlugueis());
+    }
+
     public void cadastrarLivro() {
         Livro livro = leLivro();
-        if (biblioteca.adicionaLivro(livro))
-            System.out.println("Livro cadastrado com sucesso!");
-        else
-            System.out.println("Este livro já está cadastrado. Tente outro");
+        if (biblioteca.adicionaLivro(livro)) System.out.println("Livro cadastrado com sucesso!");
+        else System.out.println("Este livro já está cadastrado. Tente outro");
     }
 
     public void cadastrarUsuario() {
         String nome = leString("nome do usuário");
         String cpf = leString("cpf do usuário");
         Cliente cliente = new Cliente(nome, cpf);
-        if (biblioteca.adicionaCliente(cliente))
-            System.out.printf("Cliente cadastrado com sucesso!");
-        else
-            System.out.printf("Não foi possível cadastrar esse cliente pois ele já está cadastrado");
+        if (biblioteca.adicionaCliente(cliente)) System.out.print("Cliente cadastrado com sucesso!");
+        else System.out.print("Não foi possível cadastrar esse cliente pois ele já está cadastrado");
     }
 
     public void removerUsuario() {
         Cliente cliente = leUsuario();
-        if (biblioteca.clientes.contains(cliente))
-            if (biblioteca.removeCliente(cliente))
-                System.out.print("Cliente removido com sucesso!");
-            else
-                System.out.print("Este cliente não pode ser removido pois tem pendências");
-        else
-            System.out.println("Cliente não cadastrado");
+        if (biblioteca.getClientes().contains(cliente))
+            if (biblioteca.removeCliente(cliente)) System.out.print("Cliente removido com sucesso!");
+            else System.out.print("Este cliente não pode ser removido pois tem pendências");
+        else System.out.println("Cliente não cadastrado");
     }
 
     public void removerLivro() {
         Livro livro = leLivro();
-        if (biblioteca.removeLivro(livro))
-            System.out.println("Livro removido com sucesso!");
-        else if (!biblioteca.livros.contains(livro))
+        if (biblioteca.removeLivro(livro)) System.out.println("Livro removido com sucesso!");
+        else if (!biblioteca.getLivros().contains(livro))
             System.out.println("Não se pode remover o que não se cadastrou");
-        else
-            System.out.println("Este livro não pode ser excluído porque está emprestado");
+        else System.out.println("Este livro não pode ser excluído porque está emprestado");
     }
 
-    public void fazerEmprestimo() {
+    public void fazerEmprestimo() throws Exception {
         Cliente cliente = leUsuario();
         Livro livro = leLivro();
         int data = Integer.parseInt(leString("data do emprestimo"));
-        if (!biblioteca.livros.contains(livro))
-            System.out.println("Não se pode emprestar o que não se cadastrou");
-        else if (!biblioteca.clientes.contains(cliente)) {
+        if (!biblioteca.getLivros().contains(livro)) System.out.println("Não se pode emprestar o que não se cadastrou");
+        else if (!biblioteca.getClientes().contains(cliente)) {
             System.out.println("Não se pode emprestar a quem não se cadastrou");
         }
-        if (biblioteca.fazAluguel(cliente, livro, 12))
-            System.out.println("Livro cadastrado com sucesso");
-        else
-            System.out.println("Este cliente já tem 2 empréstimos ativos");
+        if (biblioteca.fazAluguel(cliente, livro, new Date())) System.out.println("Livro cadastrado com sucesso");
+        else System.out.println("Este cliente já tem 2 empréstimos ativos");
     }
 
-    public void desfazerEmprestimo() {
-
+    public void desfazerEmprestimo() throws Exception {
+        Cliente cliente = leUsuario();
+        Livro livro = leLivro();
+        Aluguel aluguel = leAluguel(cliente);
+        Date dataFim = new Date();
+        livro.desfazEmprestimo(aluguel);
+        cliente.desfazEmprestimo(aluguel, dataFim);
     }
 
     public String leString(String atributo) {
@@ -148,17 +161,27 @@ public class Menu {
         String titulo = leString("título do livro");
         String autor = leString("autor do livro");
         String editora = leString("editora");
-        String dataDePublicacao = leString("data de publicação");
+        Date dataDePublicacao = new Date();
         return new Livro(titulo, autor, editora, dataDePublicacao);
     }
 
-    public int leOpcao() {
-        System.out.printf("Digite uma opção: ");
+    public int leOpcao(int min, int max) {
+        System.out.print("Digite uma opção: ");
         int opcao = scanner.nextInt();
-        if (opcao < 1 || opcao > 9)
-            opcao = 0;
+        if (opcao < min || opcao > max) opcao = 0;
         consomeEnter();
         return opcao;
+    }
+
+    public Aluguel leAluguel (Cliente cliente) throws Exception, InputMismatchException {
+        int tam = cliente.alugueisAtivos().size();
+        if (tam == 0)
+            throw new Exception("Não tem alugueis ativos");
+        System.out.println("Digite qual aluguel você quer dezfazer: ");
+        for (int i = 0; i < tam; i++)
+            System.out.println(i + 1 + ":" + cliente.alugueisAtivos().get(i));
+        int opcao = leOpcao(1, tam + 1) - 1;
+        return cliente.alugueisAtivos().get(opcao);
     }
 
     private void consomeEnter() {

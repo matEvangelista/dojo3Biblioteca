@@ -1,35 +1,37 @@
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Objects;
 
 public class Cliente {
     private String nome, cpf;
     // Um cliente tem alugueis de livros. Gambiarra? Muito provável :)
-    public ArrayList<Aluguel> alugueis = new ArrayList<>();
+    private ArrayList<Aluguel> alugueis;
 
     public Cliente(String nome, String cpf) {
         this.nome = nome;
         this.cpf = cpf;
+        alugueis = new ArrayList<>();
     }
 
-    // faz um emprestimo
-    public boolean pegaEmprestimo(Livro livro, int dataEmprestimo) {
-        if (livro.isAlugado() || !podeAlugarMais())
+    /*
+     * Quem, de fato, empresta é a classe biblioteca. Esta apenas adiciona ou remove emprestimos,
+     * portanto não haverá nenhum objeto da classe Livro aqui.
+     */
+    public boolean adicionaEmprestimo(Aluguel aluguel) throws Exception {
+        if (!podeAlugarMais())
             return false;
-        livro.setAlugado(true);
-        // exemplo de como ambos construtores foram utilizados
-        alugueis.add(new Aluguel(nome, livro, dataEmprestimo));
+        if (alugueis.contains(aluguel))
+            throw new Exception("Aluguel já feito.");
+        alugueis.add(aluguel);
         return true;
     }
 
-    // devolve livro
-    public boolean desfazEmprestimo(Livro livro) {
-         for (Aluguel aluguel : alugueis)
-             if (aluguel.getLivro().equals(livro)) {
-                 // passagem por parametro
-                 aluguel.setAtivo(false);
-                 return true;
-             }
-         return false;
+    // desfaz emprestimo
+    public boolean desfazEmprestimo(Aluguel aluguel, Date dataFim) throws Exception {
+        if (!alugueis.contains(aluguel))
+            throw new Exception("Empréstimo não registrado!");
+        alugueis.get(encontraAluguel(aluguel)).setDataFim(dataFim);
+        return true;
     }
 
     // possui aluguel ativo
@@ -60,6 +62,22 @@ public class Cliente {
         return i < 2; // dois alugueis ativos no maximo
     }
 
+    // encontra na lista de alugueis
+    private int encontraAluguel(Aluguel aluguel) {
+        for (int i = 0; i < alugueis.size(); i++)
+            if (aluguel.equals(alugueis.get(i)))
+                return i;
+        return -1;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = nome != null ? nome.hashCode() : 0;
+        result = 31 * result + (cpf != null ? cpf.hashCode() : 0);
+        result = 31 * result + (alugueis != null ? alugueis.hashCode() : 0);
+        return result;
+    }
+
     // para arraylist
     @Override
     public boolean equals(Object o) {
@@ -68,18 +86,13 @@ public class Cliente {
 
         Cliente cliente = (Cliente) o;
 
-        if (!Objects.equals(nome, cliente.nome)) return false;
-        if (!Objects.equals(cpf, cliente.cpf)) return false;
-        return Objects.equals(alugueis, cliente.alugueis);
+        return cpf.equals(cliente.cpf);
     }
 
     @Override
     public String toString() {
-        String alugueisAtivos = "";
-        if (alugueisAtivos() != null)
-            for (Aluguel aluguel : alugueisAtivos())
-                alugueisAtivos += ("\n") + aluguel.toString();
-        return "Nome: " + nome + "\nCPF: " + cpf + "\nAlugueis ativos: " + alugueisAtivos;
+        return "Nome: " + nome + ". CPF: " + cpf + ". Possui alugueis ativos?: "
+                + (possuiAluguelAtivo() ? "sim\n" : "não\n");
     }
 
     public String getNome() {
