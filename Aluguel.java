@@ -2,58 +2,51 @@ import java.util.Date;
 import java.util.Objects;
 
 public class Aluguel {
-    private Cliente cliente;
     private Livro livro;
-    private Date dataIni, dataFim;
+    private Cliente cliente;
+    private Date dataInicio;
+    private Date dataFim;
 
-    public Aluguel(Cliente cliente, Livro livro, Date dataIni) {
-        this.cliente = cliente;
+    public Aluguel(Livro livro, Cliente cliente, Date dataInicio) {
         this.livro = livro;
-        this.dataIni = dataIni;
-        this.dataFim = null;
+        this.cliente = cliente;
+        this.dataInicio = dataInicio;
+        dataFim = null;
+        livro.registrarAluguel(this);
+        cliente.registrarAluguel(this);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         Aluguel aluguel = (Aluguel) o;
-
-        if (!Objects.equals(cliente, aluguel.cliente)) return false;
-        if (!Objects.equals(livro, aluguel.livro)) return false;
-        if (!Objects.equals(dataIni, aluguel.dataIni)) return false;
-        return Objects.equals(dataFim, aluguel.dataFim);
-    }
-
-    // empréstimo está ativo
-    public boolean isAtivo() {
-        return dataFim == null;
+        return Objects.equals(livro, aluguel.livro) && Objects.equals(cliente, aluguel.cliente) &&
+                Objects.equals(dataInicio, aluguel.dataInicio) && Objects.equals(dataFim, aluguel.dataFim);
     }
 
     @Override
-    public String toString() {
-        return "Cliente: " + cliente + "\nLivro: " + livro.getTitulo() + "\nData do empréstimo: " + dataIni +
-                "\nAtivo: " + (isAtivo() ? "sim" : "não");
+    public int hashCode() {
+        return Objects.hash(livro, cliente, dataInicio, dataFim);
     }
 
-    public Cliente getCliente() {
-        return cliente;
+    public boolean isAtivo() {
+        return dataFim == null;
     }
 
     public Livro getLivro() {
         return livro;
     }
 
-    public Date getDataIni() {
-        return dataIni;
+    public Cliente getCliente() {
+        return cliente;
+    }
+
+    public Date getDataInicio() {
+        return dataInicio;
     }
 
     public Date getDataFim() {
         return dataFim;
-    }
-
-    public void setDataFim(Date dataFim) {
-        this.dataFim = dataFim;
     }
 }

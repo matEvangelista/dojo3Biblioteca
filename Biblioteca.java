@@ -1,102 +1,66 @@
-import java.lang.reflect.Array;
+import java.lang.ref.Cleaner;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 
 public class Biblioteca {
-    private ArrayList<Cliente> clientes = new ArrayList<>();
-    private ArrayList<Livro> livros = new ArrayList<>();
-    private ArrayList<Aluguel> alugueis = new ArrayList<>();
+    private ArrayList<Livro> livros;
+    private ArrayList<Cliente> clientes;
+    private ArrayList<Aluguel> alugueis;
 
     public Biblioteca() {
-    }
-
-    public boolean adicionaCliente(Cliente cliente) {
-        if (clientes.contains(cliente)) return false;
-        clientes.add(cliente);
-        return true;
-    }
-
-    public boolean removeCliente(Cliente cliente) {
-        if (clientes.contains(cliente) && !cliente.possuiAluguelAtivo()) {
-            clientes.remove(cliente);
-            return true;
-        }
-        return false;
+        this.livros = new ArrayList<>();
+        this.clientes = new ArrayList<>();
+        this.alugueis = new ArrayList<>();
     }
 
     public boolean adicionaLivro(Livro livro) {
-        if (livros.contains(livro) || livros.size() >= 1000) return false;
+        if (livros.contains(livro))
+            return false;
         livros.add(livro);
         return true;
     }
 
-    public boolean removeLivro(Livro livro) {
-        if (livros.contains(livro) && !livro.isAlugado()) {
-            livros.remove(livro);
-            return true;
-        }
+    // TODO adicionar exceptions
+    public boolean registrarAluguel(Livro livro, Cliente cliente) {
+        if (livro.isAlugado() || !cliente.podeAlugarMais(livro) || !clientes.contains(cliente) || !livros.contains(livro))
+            return false;
+        Date hoje = Calendar.getInstance().getTime();
+        Aluguel aluguel = new Aluguel(livro, cliente, hoje);
+        return alugueis.add(aluguel);
+    }
+
+    public boolean registrarClientes(Cliente cliente) {
+        if (clientes.contains(cliente))
+            return false;
+        return clientes.add(cliente);
+    }
+
+    public boolean removerCliente(Cliente cliente) throws Exception {
+        if (clientes.contains(cliente) && !cliente.possuiEmprestimoAtivo())
+            return clientes.remove(cliente);
+        if (cliente.possuiEmprestimoAtivo())
+            throw new Exception("Cliente tem empréstimo ativo");
+        if (!clientes.contains(cliente))
+            throw new Exception("Cliente não cadastrado");
         return false;
     }
 
-    public boolean fazAluguel(Cliente cliente, Livro livro, Date dataInicio) throws Exception {
-        if (!clientes.contains(cliente) || !livros.contains(livro) || !cliente.podeAlugarMais() || livro.isAlugado())
+    public boolean registrarLivro(Livro livro) {
+        if (livros.contains(livro))
             return false;
-        int pos = clientes.indexOf(cliente);
-        Aluguel al = new Aluguel(clientes.get(pos), livro, dataInicio);
-        if (clientes.get(pos).adicionaEmprestimo(al)) {
-            livro.fazEmprestimo(al);
-            alugueis.add(al);
-            return true;
-        }
-        return false;
+        return livros.add(livro);
     }
 
-    public boolean desfazAluguel(Cliente cliente, Aluguel aluguel, Livro livro, Date dataFim) throws Exception {
-        if (!clientes.contains(cliente) || !cliente.possuiAluguelAtivo() || !livros.contains(livro) ||
-                !livro.isAlugado() || !alugueis.contains(aluguel) || !aluguel.getLivro().equals(livro) ||
-                !aluguel.getCliente().equals(cliente) || encontraAluguel(aluguel) == -1)
-            return false;
-        cliente.desfazEmprestimo(aluguel, dataFim);
-        alugueis.get(encontraAluguel(aluguel)).setDataFim(dataFim);
-        livro.desfazEmprestimo(aluguel);
+    public boolean removeLivro(Livro livro) throws Exception {
+        if (!livros.contains(livro)) {
+            throw new Exception("Este livro não está cadastrado!");
+        }
+        if (livro.isAlugado()) {
+            throw new Exception("Livro já alugado.");
+        }
+        livros.remove(livro);
         return true;
     }
-
-    public ArrayList<Cliente> getClientes() {
-        return clientes;
-    }
-
-    public ArrayList<Livro> getLivros() {
-        return livros;
-    }
-
-    public String stringLivros() {
-        String resultado = "";
-        for (Livro livro : livros)
-            resultado += livro.toString();
-        return resultado;
-    }
-
-    public String stringClientes() {
-        String resultado = "";
-        for (Cliente cliente : clientes)
-            resultado += cliente.toString();
-        return resultado;
-    }
-
-    public String stringAlugueis() {
-        String resultado = "";
-        for (Aluguel aluguel : alugueis)
-            resultado += aluguel.toString();
-        return resultado;
-    }
-
-    public int encontraAluguel(Aluguel aluguel) {
-        for (int i = 0; i < alugueis.size(); i++)
-            if (aluguel.equals(alugueis.get(i)))
-                return i;
-        return -1;
-    }
-
 
 }
